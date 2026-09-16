@@ -20,13 +20,24 @@ posts: list[dict] = [
         "content": "Python is a great language for web development, and FastAPI makes it even better.",
         "date_posted": "April 21, 2025",
     },
+    {
+        "id": 3,
+        "author": "Luciano Ramalho",
+        "title": "Fluent Python",
+        "content": "Clear, Concise, and Effective Programming",
+        "date_posted": "April 1, 2022",
+    },
 ]
 
 
 @app.get("/", include_in_schema=False)
 @app.get("/posts", include_in_schema=False)
 def home(request: Request):
-    return templates.TemplateResponse(request, "home.html")
+    return templates.TemplateResponse(
+        request,
+        "home.html",
+        {"posts": posts, "title": "Home"},
+    )
 
 
 @app.get("/api/posts")
