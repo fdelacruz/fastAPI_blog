@@ -1,8 +1,11 @@
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, Request, status
+from fastapi.exception_handlers import (
+    http_exception_handler,
+    request_validation_exception_handler,
+)
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import select
@@ -322,18 +325,18 @@ def delete_post(post_id: int, db: Annotated[Session, Depends(get_db)]):
 
 ## StarletteHTTPException Handler
 @app.exception_handler(StarletteHTTPException)
-def general_http_exception_handler(request: Request, exception: StarletteHTTPException):
+async def general_http_exception_handler(
+    request: Request, exception: StarletteHTTPException
+):
+    if request.url.path.startswith("/api"):
+        return await http_exception_handler(request, exception)
+
     message = (
         exception.detail
         if exception.detail
         else "An error occurred. Please check your request and try again."
     )
 
-    if request.url.path.startswith("/api"):
-        return JSONResponse(
-            status_code=exception.status_code,
-            content={"detail": message},
-        )
     return templates.TemplateResponse(
         request,
         "error.html",
@@ -348,12 +351,12 @@ def general_http_exception_handler(request: Request, exception: StarletteHTTPExc
 
 ### RequestValidationError Handler
 @app.exception_handler(RequestValidationError)
-def validation_exception_handler(request: Request, exception: RequestValidationError):
+async def validation_exception_handler(
+    request: Request, exception: RequestValidationError
+):
     if request.url.path.startswith("/api"):
-        return JSONResponse(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            content={"detail": exception.errors()},
-        )
+        return await request_validation_exception_handler(request, exception)
+
     return templates.TemplateResponse(
         request,
         "error.html",
