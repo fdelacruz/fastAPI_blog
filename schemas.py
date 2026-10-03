@@ -16,6 +16,7 @@ class UserPublic(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    username: str
     image_file: str | None
     image_path: str
 
@@ -41,7 +42,7 @@ class PostBase(BaseModel):
 
 
 class PostCreate(PostBase):
-    user_id: int  # TEMPORARY
+    pass
 
 
 class PostUpdate(BaseModel):
